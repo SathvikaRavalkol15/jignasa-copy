@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Users, BarChart2, Calendar, BookOpen, X, Clock, MapPin, Plus, Save, UserPlus, Settings, FileText, TrendingUp, Activity, BarChart, Sparkles, CheckCircle2 } from 'lucide-react';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart as RechartsBarChart, Bar, XAxis, YAxis, Tooltip, Legend, CartesianGrid, LineChart, Line } from 'recharts';
@@ -58,24 +57,14 @@ interface EngagementSettings {
 
 const FacultyDashboard: React.FC = () => {
   // -- Modal States --
-  const [showViewModal, setShowViewModal] = useState(false); // Lectures Modal
-  const [showAddModal, setShowAddModal] = useState(false);   // Add Lecture Modal
+  const [showViewModal, setShowNotificationsModal] = useState(false); // Notifications Modal (used for schedule view)
   const [showStudentListModal, setShowStudentListModal] = useState(false); // Students List Modal
-  const [showAddStudentModal, setShowAddStudentModal] = useState(false);   // Add Student Modal
 
   const [isLoading, setIsLoading] = useState(false);
 
   // -- Data States (Lectures) --
   const [todaysLectures, setTodaysLectures] = useState<Lecture[]>([]);
   const [dailyLectureCount, setDailyLectureCount] = useState(2); // Completed lectures today
-  const [newLecture, setNewLecture] = useState<Lecture>({
-    title: '',
-    group_name: '',
-    lecture_date: new Date().toISOString().split('T')[0],
-    start_time: '',
-    end_time: '',
-    location: ''
-  });
 
   // Completed Lectures for the "Previous Lectures" section
   const [completedLectures, setCompletedLectures] = useState<Lecture[]>([
@@ -88,13 +77,6 @@ const FacultyDashboard: React.FC = () => {
   // -- Data States (Students) --
   const [studentList, setStudentList] = useState<Student[]>([]);
   const [totalStudentsCount, setTotalStudentsCount] = useState(142);
-  const [newStudent, setNewStudent] = useState<Student>({
-    full_name: '',
-    roll_number: '',
-    email: '',
-    class_group: '',
-    attendance_percentage: 0
-  });
 
   // Previous Class Summary Data (Mocked)
   const previousClassSummary = {
@@ -136,30 +118,6 @@ const FacultyDashboard: React.FC = () => {
     }
   };
 
-  const handleAddLectureSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-        const response = await fetch('/api/lectures/add', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(newLecture)
-        });
-
-        if (response.ok || true) { 
-            setShowAddModal(false);
-            setNewLecture({
-                title: '', group_name: '', lecture_date: new Date().toISOString().split('T')[0], start_time: '', end_time: '', location: ''
-            });
-            alert("Lecture scheduled successfully!");
-        }
-    } catch (error) {
-        console.error("Error adding lecture:", error);
-    } finally {
-        setIsLoading(false);
-    }
-  };
-
   // -- Backend Integration Logic: Students --
   const fetchStudentList = async () => {
     setIsLoading(true);
@@ -194,7 +152,7 @@ const FacultyDashboard: React.FC = () => {
       style: "bg-blue-50 text-[#1B3B6F]",
       onClick: () => {
           fetchTodaysLectures();
-          setShowViewModal(true);
+          setShowNotificationsModal(true);
       },
       isClickable: true
     },
@@ -362,16 +320,6 @@ const FacultyDashboard: React.FC = () => {
             </div>
         </div>
       </div>
-
-      {/* Action Area */}
-      <div className="flex justify-end gap-4 pt-4">
-          <button 
-             onClick={() => setShowAddModal(true)}
-             className="btn-elevated flex items-center gap-2 px-8 py-3 bg-[#2C4C88] text-white font-bold rounded-xl shadow-lg shadow-blue-900/10"
-          >
-              <Plus className="w-5 h-5" /> Schedule New Lecture
-          </button>
-      </div>
     </div>
 
     {/* -- Modals -- */}
@@ -390,7 +338,7 @@ const FacultyDashboard: React.FC = () => {
                             <p className="text-xs text-gray-500 font-serif italic">{new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                         </div>
                     </div>
-                    <button onClick={() => setShowViewModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full">
+                    <button onClick={() => setShowNotificationsModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full">
                         <X className="w-6 h-6" />
                     </button>
                 </div>
@@ -428,116 +376,12 @@ const FacultyDashboard: React.FC = () => {
 
                 <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex justify-end">
                     <button 
-                        onClick={() => setShowViewModal(false)}
+                        onClick={() => setShowNotificationsModal(false)}
                         className="btn-elevated px-6 py-2 bg-white border border-gray-200 text-gray-700 font-bold rounded-lg"
                     >
                         Close
                     </button>
                 </div>
-            </div>
-        </div>
-    )}
-
-    {/* Add New Lecture Modal */}
-    {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="modal-elevated bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col animate-in slide-in-from-bottom-8 duration-300">
-                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-green-50 text-green-700 rounded-lg">
-                            <Plus className="w-5 h-5" />
-                        </div>
-                        <h2 className="text-xl font-serif font-bold text-gray-900">Schedule New Lecture</h2>
-                    </div>
-                    <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full">
-                        <X className="w-6 h-6" />
-                    </button>
-                </div>
-                
-                <form onSubmit={handleAddLectureSubmit} className="p-8 space-y-4 overflow-y-auto max-h-[70vh]">
-                     <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Lecture Title</label>
-                        <input 
-                            type="text" 
-                            required
-                            value={newLecture.title}
-                            onChange={e => setNewLecture({...newLecture, title: e.target.value})}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#1B3B6F] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-all shadow-inner"
-                        />
-                    </div>
-                    
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Group / Class</label>
-                        <input 
-                            type="text" 
-                            required
-                            value={newLecture.group_name}
-                            onChange={e => setNewLecture({...newLecture, group_name: e.target.value})}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#1B3B6F] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-all shadow-inner"
-                        />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="col-span-2">
-                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Date</label>
-                             <input 
-                                type="date" 
-                                required
-                                value={newLecture.lecture_date}
-                                onChange={e => setNewLecture({...newLecture, lecture_date: e.target.value})}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#1B3B6F] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-all shadow-inner"
-                            />
-                        </div>
-                        <div>
-                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Start Time</label>
-                             <input 
-                                type="time" 
-                                required
-                                value={newLecture.start_time}
-                                onChange={e => setNewLecture({...newLecture, start_time: e.target.value})}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#1B3B6F] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-all shadow-inner"
-                            />
-                        </div>
-                        <div>
-                             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">End Time</label>
-                             <input 
-                                type="time" 
-                                required
-                                value={newLecture.end_time}
-                                onChange={e => setNewLecture({...newLecture, end_time: e.target.value})}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#1B3B6F] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-all shadow-inner"
-                            />
-                        </div>
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Location / Room</label>
-                        <input 
-                            type="text" 
-                            required
-                            value={newLecture.location}
-                            onChange={e => setNewLecture({...newLecture, location: e.target.value})}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-[#1B3B6F] outline-none text-gray-700 bg-gray-50 focus:bg-white transition-all shadow-inner"
-                        />
-                    </div>
-
-                    <div className="pt-4 flex gap-3">
-                         <button 
-                            type="button"
-                            onClick={() => setShowAddModal(false)}
-                            className="btn-elevated flex-1 px-6 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-50"
-                        >
-                            Cancel
-                        </button>
-                        <button 
-                            type="submit"
-                            disabled={isLoading}
-                            className="btn-elevated flex-1 px-6 py-3 bg-[#2C4C88] text-white font-bold rounded-lg shadow-lg shadow-blue-900/10 flex items-center justify-center gap-2"
-                        >
-                            {isLoading ? 'Saving...' : <><Save className="w-4 h-4" /> Schedule</>}
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     )}
